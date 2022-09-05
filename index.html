@@ -1,0 +1,513 @@
+<html>
+
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+</head>
+<style>
+  /* Style the tab */
+  .tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+  }
+
+  /* Style the buttons that are used to open the tab content */
+  .tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+  }
+
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    background-color: #ddd;
+  }
+
+  /* Create an active/current tablink class */
+  .tab button.active {
+    background-color: #ccc;
+  }
+
+  /* Style the tab content */
+  .tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+
+  .slidecontainer {
+    width: 100%;
+    /* Width of the outside container */
+  }
+
+  /* The slider itself */
+  .slider {
+    -webkit-appearance: none;
+    /* Override default CSS styles */
+    appearance: none;
+    width: 100%;
+    /* Full-width */
+    height: 25px;
+    /* Specified height */
+    background: #d3d3d3;
+    /* Grey background */
+    outline: none;
+    /* Remove outline */
+    opacity: 0.7;
+    /* Set transparency (for mouse-over effects on hover) */
+    -webkit-transition: .2s;
+    /* 0.2 seconds transition on hover */
+    transition: opacity .2s;
+  }
+
+  /* Mouse-over effects */
+  .slider:hover {
+    opacity: 1;
+    /* Fully shown on mouse-over */
+  }
+
+  /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    /* Override default look */
+    appearance: none;
+    width: 25px;
+    /* Set a specific slider handle width */
+    height: 25px;
+    /* Slider handle height */
+    background: #dd0909;
+    /* Green background */
+    cursor: pointer;
+    /* Cursor on hover */
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px;
+    /* Set a specific slider handle width */
+    height: 25px;
+    /* Slider handle height */
+    background: #dd0909;
+    /* Green background */
+    cursor: pointer;
+    /* Cursor on hover */
+  }
+
+  .field {
+    text-decoration: none;
+    text-align: center;
+    /* font-size: 2vw; */
+    /* width: 2rem;
+        height: 2rem;
+        line-height: 2rem; */
+    /* border-color: rgb(17, 179, 57);   */
+    border-width: .25em;
+    border-style: solid;
+    display: inline-block;
+  }
+
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Create columns that floats next to each other */
+  .column {
+    float: left;
+    padding: 2px;
+    border: 2px solid grey;
+    border-radius: 5px;
+  }
+
+  /* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+</style>
+
+
+
+
+<body>
+  <h2>Cross Section Designer for Laminated Circular Core - v2<br>
+    by: Ahmed Hassan, ahah43210@gmail.com
+    14.07.2022
+  </h2>
+  <!-- Note the usage of `type=module` here as this is an ES6 module -->
+  <script type="module">
+    import init, { my_core_design } from './pkg/without_a_bundler.js';
+
+    async function run() {
+      await init();
+
+      // const result = add(1, 2);
+      // console.log(`1 + 2 = ${result}`);
+      // if (result !== 3)
+      //   throw new Error("wasm addition doesn't work!");
+
+      var sliderLL = document.getElementById("myRangeLL");
+      var outputLL = document.getElementById("demoLL");
+      var sliderUL = document.getElementById("myRangeUL");
+      var outputUL = document.getElementById("demoUL");
+      var Availables = [];
+      var inAvailables = [];
+      outputLL.innerHTML = sliderLL.value; // Display the default slider value
+      outputUL.innerHTML = sliderUL.value; // Display the default slider value
+      render();
+
+
+
+      D.onchange = function () {
+        this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+        let DmaxValueCeil = 10 * (Math.ceil(Number(this.value) / 10) - 1);
+        sliderUL.max = DmaxValueCeil;
+        sliderUL.value = DmaxValueCeil;
+        sliderLL.max = DmaxValueCeil;
+        if (Number(this.value) < Math.min(Number(sliderLL.value), Number(sliderLL.min))) {
+
+          // let DminValueCeil = 10 * (Math.floor(Number(this.value) / 10)-1);
+          sliderLL.min = 10;
+          sliderLL.value = 10;
+        }
+        outputUL.innerHTML = sliderUL.value; // Display the default slider value
+        outputLL.innerHTML = sliderLL.value; // Display the default slider value
+        render();
+        // sliderLL.oninput();
+      }
+
+      th.onchange = function () {
+        render();
+      }
+
+      user_tol.onchange = function () {
+        render();
+      }
+
+      sheets_per_book.onchange = function () {
+        render();
+      }
+
+      // Update the current slider value (each time you drag the slider handle)
+      sliderUL.oninput = function () {
+        outputUL.innerHTML = this.value;
+        this.max = 10 * (Math.ceil(Number(D.value) / 10) - 1);
+        if (Number(sliderLL.value) > Number(this.value)) {
+          sliderLL.value = this.value;
+          outputLL.innerHTML = sliderLL.value; // Display the default slider value
+        }
+        render();
+      }
+
+      sliderLL.oninput = function () {
+        this.max = 10 * (Math.ceil(Number(D.value) / 10) - 1);
+        outputLL.innerHTML = this.value;
+        if (Number(sliderUL.value) < Number(this.value)) {
+          sliderUL.value = this.value;
+          outputUL.innerHTML = sliderUL.value; // Display the default slider value
+        }
+        render();
+      }
+
+
+      function drawCore(steps) {
+        let oldCanvas = document.getElementById("canvas");
+        if (oldCanvas != null) { oldCanvas.remove() };
+        let canvas = document.createElement("CANVAS");
+        canvas.setAttribute("id", "canvas");
+        canvas.setAttribute("width", 400);
+        canvas.setAttribute("height", 400);
+        var DrawingArea = document.getElementById("DrawingArea")
+        DrawingArea.appendChild(canvas);
+        // checkboxes = document.getElementsByName('Steps');
+        const D = parseFloat(document.getElementById('D').value);
+        const R = 0.5 * D;
+        const th = parseFloat(document.getElementById('th').value);
+        const sheetsPerBook = parseFloat(document.getElementById('sheets_per_book').value);
+        const book_th = th * sheetsPerBook;
+        const user_tol = parseFloat(document.getElementById('user_tol').value);
+        var accumulateH = 0.0;
+        const Ru = canvas.width / 2;
+        const thisRatio = 2 * Ru / R;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.fillStyle = "#FF0000";
+        var totalQty = 0.0;
+        for (let i = 0, n = steps.length; i < n; i++) {
+          const thisStep = parseFloat(steps[i]);
+
+          var thisQty;
+          const idealCorener = Math.sqrt(D * D / 4.0 - thisStep * thisStep / 4.0) 
+          let q_double = idealCorener/ book_th;
+          let q_ceiled = Math.ceil(q_double);
+          let q_floored = Math.floor(q_double);
+          if (book_th * (q_ceiled - q_double) <= user_tol) {
+            thisQty = q_ceiled;
+          }
+          else {
+            thisQty = q_floored;
+          }
+          thisQty -= totalQty;
+          totalQty += thisQty;
+          var thiscorner = book_th * totalQty;
+          let corner_to_perfectProfile = idealCorener - thiscorner;
+          // let thisLable = document.getElementById("L" + steps[i]);
+          // thisLable.innerHTML = " " + thisStep;
+          // thisLable.innerHTML += " -- " + thiscorner + " mm ";
+          // thisLable.innerHTML += "== (" + Math.round(thiscorner / th) + " sheets)";
+          ctx.rect(0, accumulateH, thisStep / 2 * thisRatio, thiscorner * thisRatio - accumulateH);
+          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books"+ ", corner to profile = " + Math.round(corner_to_perfectProfile*100)/100+" mm", 0, (2 * thiscorner * thisRatio) / 2)
+          accumulateH = thiscorner * thisRatio;
+          // console.log(thiscorner)
+        }
+        // console.log(R)
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 2 * Ru, 0 * Math.PI, 2 * Math.PI);
+        ctx.stroke();
+        ctx.moveTo(0, 0);
+      }
+      function render() {
+        var DrawingArea = document.getElementById("DrawingArea");
+        DrawingArea.innerHTML = "";
+        let screenWidth = screen.width;
+        root.innerHTML = "";
+        let minSheet = Number(sliderLL.value);
+        let maxSheet = Number(sliderUL.value);
+        Availables = [];
+        let results = "";
+        for (let x = minSheet; x <= maxSheet; x += 10) {
+          let element = document.createElement("button");
+          element.classList.add("field");
+          // element.href = "#";
+          element.innerText = x;
+          if (!inAvailables.includes(x)) {
+            Availables.push(x);
+            element.style.background = "skyblue";
+            element.style.fontWeight = "bold";
+          } else {
+            element.style.background = "black";
+          }
+          element.style.width = screenWidth / 30;
+          element.style.height = screenWidth / 30;
+          element.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            if (inAvailables.includes(x)) {
+              inAvailables = inAvailables.filter(i => i != x);
+            } else {
+              inAvailables.push(x);
+            }
+            render();
+          });
+
+          root.appendChild(element);
+        };
+        root.style.gridTemplate = `repeat(100, auto) / repeat(20, auto)`;
+        results = "";
+        if (Availables.length != 0) {
+          let newTh = parseFloat(th.value) * parseFloat(sheets_per_book.value);
+          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value);
+        }
+        Resultsss.innerHTML = "";
+        detailedResults.innerHTML = "";
+        detailedResultsLABEL.innerHTML = "";
+        results = results.split("***");
+        for (let si = 0; si < results.length; si++) {
+          let elementP = document.createElement("a");
+          elementP.innerText = results[si];
+          elementP.href = "#detailedResults";
+          elementP.style.textDecoration = "none";
+          elementP.style.fontSize = "10pt";
+          elementP.style.color = "gray";
+
+          elementP.addEventListener("mouseenter", (evt) => {
+            evt.preventDefault();
+            // elementP.style.backgroundColor = "green";
+            elementP.style.color = "black";
+            elementP.style.fontSize = "16pt";
+            elementP.style.backgroundColor = "grey";
+          });
+          elementP.addEventListener("mouseleave", (evt) => {
+            evt.preventDefault();
+            elementP.style.backgroundColor = "white";
+            elementP.style.color = "grey";
+            elementP.style.fontSize = "10pt";
+          });
+
+          elementP.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            document.getElementById('detailedResults').scrollIntoView();
+            detailedResults.innerHTML = "";
+            detailedResultsLABEL.innerHTML = "Details of the Selected Solution:";
+            detailedResultsLABEL.style.fontWeight = "bold";
+            // detailedResults.innerHTML = elementP.innerText;
+            //
+            let elementD = document.createElement("a");
+
+
+            elementD.innerHTML = "D = " + D.value + " mm, " + elementP.innerText.slice(0, 21) + " mm^2 <br><br>";
+            elementD.style.color = "black";
+            detailedResults.appendChild(elementD);
+
+            const regex = /\[.*?\]/gm;
+            let m;
+            if ((m = regex.exec(elementP.innerText)) !== null) {
+              // This is necessary to avoid infinite loops with zero-width matches
+              if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+              }
+              let d_big = Number(D.value);
+              let d_small = 0.0;
+              let previousQty = 0;
+              m.forEach((match, groupIndex) => {
+                // console.log(`Found match, group ${groupIndex}: ${match}`);
+                let thisComb = match.replace(/[^0-9.]/g, ' ').replace(/[\n\r\s\t]+/g, ' ').replace(/^\s+|\s+$/g, '').split(" ");
+                console.log(thisComb);
+                // for (let sheeti = 0; sheeti < thisComb.length; sheeti++) {
+                //   let elementS = document.createElement("a");
+                //   d_small = Number(thisComb[sheeti]);
+                //   let thisSheetsQty = Math.ceil(Math.sqrt(d_big * d_big / 4.0 - d_small * d_small / 4.0) / Number(th.value)) - previousQty;
+                //   let thisSheetsTh = thisSheetsQty * Number(th.value);
+                //   elementS.innerHTML = "Sheet size: " + thisComb[sheeti].toString().padStart(3, '0') + " - Sheets Qty = " + thisSheetsQty.toString().padStart(3, '0') + " ×2 sheets == " + thisSheetsTh.toFixed(3) + " ×2 mm hieght<br>";
+                //   detailedResults.appendChild(elementS);
+                //   // console.log(Number(th));
+                //   previousQty += thisSheetsQty;
+                // }
+                // thisSheetQty = 
+                drawCore(thisComb)
+              });
+            }
+
+
+
+
+            //
+
+            // elementP.style.color = "green";
+          });
+          Resultsss.appendChild(elementP);
+        }
+        // Resultsss.innerText = results.replaceAll("***", "\n");
+        // return results;
+      }
+
+
+      // function runCalculations(){
+      // results = myCoreDesign(Availables.toString());
+      // console.log(results);
+      // }
+
+
+    }
+
+    run();
+  </script>
+
+  <!-- Tab links -->
+  <!-- <div class="tab">
+  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'London')">Core & sheets dimensions</button>
+  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'Paris')">Available sheets</button>
+  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'Tokyo')">Results</button>
+</div> -->
+
+  <!-- Tab content -->
+  <!-- <div id="London" class="tabcontent">
+
+  <h3 style = "font-size:20pt">Core & sheets dimensions</h3>
+  <div style="background-color:white;">
+  <p>London is the capital city of England.</p>
+</div> -->
+
+
+  <!-- <div id="Paris" class="tabcontent"> -->
+  <!-- <div class="row"> -->
+  <div class="column" style="background-color:white;width: 40%;">
+    <h3 style="font-size:20pt">Core & sheets dimensions</h3>
+    <label> Core Diameter = </label><input type="number" id="D" value="250" min="20"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
+    <label> Sheet Thickness= </label><input type="text" id="th" value="0.27"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
+    <label> Sheets per Book = </label><input type="number" id="sheets_per_book" value="7" min="1"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
+    <label> Allowable Tolerance= </label><input type="text" id="user_tol" value="0.0"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
+
+
+
+    <h3 style="font-size:16pt">* Limit of Available Sheet Sizes </h3>
+
+    <div class="slidecontainer">
+      <label> Upper Limit = </label><label id="demoUL"></label>
+      <input type="range" min="10" max="240" value="240" step="10" class="slider" id="myRangeUL">
+    </div>
+
+    <div class="slidecontainer">
+      <label> Lower Limit = </label><label id="demoLL"></label>
+      <input type="range" min="10" max="240" value="50" step="10" class="slider" id="myRangeLL">
+    </div>
+
+    <div>
+      <h3 style="font-size:16pt">* Click on a Sheet Size to its Toggle Availablity </h3>
+      <p id="root" display: grid; gap: 10px 10px;></p>
+    </div>
+
+    <div class="column" style="float:left ;background-color:white;width: 100%;">
+      <label id="detailedResultsLABEL" for="detailedResults"></label>
+      <p id="detailedResults" style="color:#dd0909; font-size: medium;"></p>
+      <div id="DrawingArea" style="background-color:white;"></div>
+    </div>
+
+
+  </div>
+  <div class="column" style="background-color:white;width: 60%;">
+    <h3 style="font-size:16pt">The best configuration for each possible number of steps N</h3>
+    <h3 style="font-size:12pt">* Click on a solution to print more details</h3>
+    <p id="Resultsss"> </p>
+  </div>
+
+
+  <!-- <div id="Tokyo" class="tabcontent">
+    <h3>R</h3>
+  </div> -->
+
+
+
+  <script>
+
+    // function openCity(evt, cityName) {
+    //   // Declare all variables
+    //   var i, tabcontent, tablinks;
+
+    //   // Get all elements with class="tabcontent" and hide them
+    //   tabcontent = document.getElementsByClassName("tabcontent");
+    //   for (i = 0; i < tabcontent.length; i++) {
+    //     tabcontent[i].style.display = "none";
+    //   }
+
+    //   // Get all elements with class="tablinks" and remove the class "active"
+    //   tablinks = document.getElementsByClassName("tablinks");
+    //   for (i = 0; i < tablinks.length; i++) {
+    //     tablinks[i].className = tablinks[i].className.replace(" active", "");
+    //   }
+
+    //   // Show the current tab, and add an "active" class to the button that opened the tab
+    //   document.getElementById(cityName).style.display = "block";
+    //   evt.currentTarget.className += " active";
+    // }
+
+  </script>
+
+
+</body>
+
+</html>
