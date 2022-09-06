@@ -141,7 +141,7 @@
   </h2>
   <!-- Note the usage of `type=module` here as this is an ES6 module -->
   <script type="module">
-    import init, { my_core_design } from './pkg/without_a_bundler.js';
+    import init, { my_core_design } from './pkg/without_a_bundler_bare_for.js';
 
     async function run() {
       await init();
@@ -188,6 +188,9 @@
       user_tol.onchange = function () {
         render();
       }
+      min_stack.onchange = function () {
+        render();
+      }
 
       sheets_per_book.onchange = function () {
         render();
@@ -231,6 +234,7 @@
         const sheetsPerBook = parseFloat(document.getElementById('sheets_per_book').value);
         const book_th = th * sheetsPerBook;
         const user_tol = parseFloat(document.getElementById('user_tol').value);
+        const min_stack = parseFloat(document.getElementById('min_stack').value);
         var accumulateH = 0.0;
         const Ru = canvas.width / 2;
         const thisRatio = 2 * Ru / R;
@@ -248,7 +252,8 @@
           let q_double = idealCorener/ book_th;
           let q_ceiled = Math.ceil(q_double);
           let q_floored = Math.floor(q_double);
-          if (book_th * (q_ceiled - q_double) <= user_tol) {
+          let r_ceiled = Math.sqrt(book_th*q_ceiled * book_th*q_ceiled / 4.0 + thisStep * thisStep / 4.0) 
+          if (r_ceiled - D/2 > user_tol) {
             thisQty = q_ceiled;
           }
           else {
@@ -274,6 +279,7 @@
         ctx.moveTo(0, 0);
       }
       function render() {
+        // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         var DrawingArea = document.getElementById("DrawingArea");
         DrawingArea.innerHTML = "";
         let screenWidth = screen.width;
@@ -312,7 +318,7 @@
         results = "";
         if (Availables.length != 0) {
           let newTh = parseFloat(th.value) * parseFloat(sheets_per_book.value);
-          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value);
+          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value, min_stack.value);
         }
         Resultsss.innerHTML = "";
         detailedResults.innerHTML = "";
@@ -439,6 +445,9 @@
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
     <label> Allowable Tolerance= </label><input type="text" id="user_tol" value="0.0"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
+    <label> Minimum Stack= </label><input type="text" id="min_stack" value="2"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
 
