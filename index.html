@@ -273,7 +273,7 @@
           // thisLable.innerHTML += " -- " + thiscorner + " mm ";
           // thisLable.innerHTML += "== (" + Math.round(thiscorner / th) + " sheets)";
           ctx.rect(0, accumulateH, thisStep / 2 * thisRatio, thiscorner * thisRatio - accumulateH);
-          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * (previouse_corner-thiscorner)/2 * thisRatio) / 2)
+          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * (previouse_corner+thiscorner)/2 * thisRatio) / 2)
           previouse_corner = thiscorner;
           accumulateH = thiscorner * thisRatio;
           // console.log(thiscorner)
