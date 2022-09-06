@@ -11,16 +11,17 @@ export function add(a: number, b: number): number;
 * @param {string} th_string
 * @param {string} availables
 * @param {string} user_tol_string
+* @param {string} min_stack_string
 * @returns {string}
 */
-export function my_core_design(dia_string: string, th_string: string, availables: string, user_tol_string: string): string;
+export function my_core_design(dia_string: string, th_string: string, availables: string, user_tol_string: string, min_stack_string: string): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly add: (a: number, b: number) => number;
-  readonly my_core_design: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+  readonly my_core_design: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
