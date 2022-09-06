@@ -188,6 +188,9 @@
       user_tol.onchange = function () {
         render();
       }
+      sheetStep.onchange = function () {
+        render();
+      }
       min_stack.onchange = function () {
         render();
       }
@@ -234,6 +237,7 @@
         const sheetsPerBook = parseFloat(document.getElementById('sheets_per_book').value);
         const book_th = th * sheetsPerBook;
         const user_tol = parseFloat(document.getElementById('user_tol').value);
+        const sheetStep = parseFloat(document.getElementById('sheetStep').value);
         const min_stack = parseFloat(document.getElementById('min_stack').value);
         var accumulateH = 0.0;
         const Ru = canvas.width / 2;
@@ -248,12 +252,12 @@
           const thisStep = parseFloat(steps[i]);
 
           var thisQty;
-          const idealCorener = Math.sqrt(D * D / 4.0 - thisStep * thisStep / 4.0) 
-          let q_double = idealCorener/ book_th;
+          const idealCorener = Math.sqrt(D * D / 4.0 - thisStep * thisStep / 4.0)
+          let q_double = idealCorener / book_th;
           let q_ceiled = Math.ceil(q_double);
           let q_floored = Math.floor(q_double);
-          let r_ceiled = Math.sqrt(book_th*q_ceiled * book_th*q_ceiled / 4.0 + thisStep * thisStep / 4.0) 
-          if (r_ceiled - D/2 > user_tol) {
+          let r_ceiled = Math.sqrt(book_th * q_ceiled * book_th * q_ceiled / 4.0 + thisStep * thisStep / 4.0)
+          if (r_ceiled - D / 2 > user_tol) {
             thisQty = q_ceiled;
           }
           else {
@@ -268,7 +272,7 @@
           // thisLable.innerHTML += " -- " + thiscorner + " mm ";
           // thisLable.innerHTML += "== (" + Math.round(thiscorner / th) + " sheets)";
           ctx.rect(0, accumulateH, thisStep / 2 * thisRatio, thiscorner * thisRatio - accumulateH);
-          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books"+ ", corner to profile = " + Math.round(corner_to_perfectProfile*100)/100+" mm", 0, (2 * thiscorner * thisRatio) / 2)
+          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * thiscorner * thisRatio) / 2)
           accumulateH = thiscorner * thisRatio;
           // console.log(thiscorner)
         }
@@ -288,7 +292,8 @@
         let maxSheet = Number(sliderUL.value);
         Availables = [];
         let results = "";
-        for (let x = minSheet; x <= maxSheet; x += 10) {
+        
+        for (let x = minSheet; x <= maxSheet; x += parseInt(sheetStep.value)) {
           let element = document.createElement("button");
           element.classList.add("field");
           // element.href = "#";
@@ -438,21 +443,30 @@
     <label> Core Diameter = </label><input type="number" id="D" value="250" min="20"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
+    <label> Allowable Dia. Tolerance= </label><input type="number" id="user_tol" value="0.0" min="0.0" max="1.0" step="0.1"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
     <label> Sheet Thickness= </label><input type="text" id="th" value="0.27"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
     <label> Sheets per Book = </label><input type="number" id="sheets_per_book" value="7" min="1"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
-    <label> Allowable Tolerance= </label><input type="text" id="user_tol" value="0.0"
-      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
     <label> Minimum Stack= </label><input type="text" id="min_stack" value="2"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
+    <label> Lamination Factor= </label><input type="number" id="laminFactor" value="0.96" min="0.85" max="1.0" step="0.01"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
+    <label> Stacking Factor= </label><input type="number" id="stackFactor" value="1.00" min="0.85" max="1.0" step="0.01"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
 
+      <label> Sheet Sizes Step = </label><input type="number" id="sheetStep" value="10" min="5" max="20" step="5"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
 
-
+      
     <h3 style="font-size:16pt">* Limit of Available Sheet Sizes </h3>
 
     <div class="slidecontainer">
