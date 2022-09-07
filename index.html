@@ -263,13 +263,18 @@
           let q_double = idealCorener / book_th;
           let q_ceiled = Math.ceil(q_double);
           let q_floored = Math.floor(q_double);
-          let r_ceiled = Math.sqrt(book_th * q_ceiled * book_th * q_ceiled / 4.0 + thisStep * thisStep / 4.0)
-          if (r_ceiled - D / 2 > user_tol) {
+          let r_ceiled = Math.sqrt(book_th * q_ceiled * book_th * q_ceiled + thisStep * thisStep / 4.0);
+          let r_floored= Math.sqrt(book_th * q_floored * book_th * q_floored + thisStep * thisStep / 4.0);
+          let thisD = 0.0;
+          if ((r_ceiled*2 - D) < user_tol) {
             thisQty = q_ceiled;
+            thisD = 2.0*r_ceiled;
           }
           else {
             thisQty = q_floored;
+            thisD = 2.0*r_floored;
           }
+          console.log(thisD)
           thisQty -= totalQty;
           totalQty += thisQty;
           var thiscorner = book_th * totalQty;
@@ -279,7 +284,8 @@
           // thisLable.innerHTML += " -- " + thiscorner + " mm ";
           // thisLable.innerHTML += "== (" + Math.round(thiscorner / th) + " sheets)";
           ctx.rect(0, accumulateH, thisStep / 2 * thisRatio, thiscorner * thisRatio - accumulateH);
-          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * (thiscorner-1) * thisRatio) / 2)
+          // ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * (thiscorner-1) * thisRatio) / 2)
+          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", Perfect dia - step dia = " + Math.round((D - thisD) * 100) / 100 + " mm", 0, (2 * (thiscorner-1) * thisRatio) / 2)
           previouse_corner = thiscorner;
           accumulateH = thiscorner * thisRatio;
           // console.log(thiscorner)
