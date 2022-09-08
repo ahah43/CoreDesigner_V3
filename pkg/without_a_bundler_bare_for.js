@@ -1,3 +1,4 @@
+
 let wasm;
 
 const heap = new Array(32).fill(undefined);
