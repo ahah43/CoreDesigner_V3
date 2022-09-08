@@ -220,9 +220,9 @@
         render();
       }
 
-      stackFactor.onchange = function () {
-        render();
-      }
+      // stackFactor.onchange = function () {
+      //   render();
+      // }
       lamFactor.onchange = function () {
         render();
       }
@@ -347,14 +347,14 @@
         indirilecekMetin += "Minimum Stack; " + min_stack + ";mm \n";
         indirilecekMetin += "Dia. Positive Tolerance; " + user_tol + ";mm \n";
         indirilecekMetin += "Lamination Factor; " + lamFactor.value + "; \n";
-        indirilecekMetin += "Stacking Factor; " + stackFactor.value + "; \n";
+        // indirilecekMetin += "Stacking Factor; " + stackFactor.value + "; \n";
         indirilecekMetin += "Frequency; " + freq.value + ";Hz \n";
         indirilecekMetin += "Volt Per Turn; " + voltperturn.value + ";volt/turn \n";
 
         indirilecekMetin += ";\n";
         indirilecekMetin += ";\n";
         indirilecekMetin += "Results; \n";
-        let effective_area = totalArea * stackFactor.value * lamFactor.value;
+        let effective_area = totalArea * lamFactor.value;
         indirilecekMetin += "obtained Area; " + effective_area + ";mm2 \n";
         // indirilecekMetin += "obtained Area; " + solutionLine.slice(14, 19) + ";mm2 \n";
         // indirilecekMetin += "Bmax; " + solutionLine.slice(64, 68) + ";Tesla \n";
@@ -421,7 +421,7 @@
         results = "";
         if (Availables.length != 0) {
           let newTh = parseFloat(th.value) * parseFloat(sheets_per_book.value);
-          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value, min_stack.value, lamFactor.value, stackFactor.value, freq.value, voltperturn.value);
+          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value, min_stack.value, lamFactor.value, freq.value, voltperturn.value);
         }
         // console.log(results);
         Resultsss.innerHTML = "";
@@ -536,7 +536,7 @@
       step="0.1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
 
-    <label> Volt per Turn = </label><input type="number" id="voltperturn" value="10.0" min="0.1" max="100" step="1.0"
+    <label> Volt per Turn = </label><input type="number" id="voltperturn" value="10.0" min="0.1" max="200" step="0.1"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> volt<br>
 
@@ -567,9 +567,9 @@
     <label> Lamination Factor= </label><input type="number" id="lamFactor" value="0.96" min="0.85" max="1.0" step="0.01"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
-    <label> Stacking Factor= </label><input type="number" id="stackFactor" value="1.00" min="0.85" max="1.0" step="0.01"
+    <!-- <label> Stacking Factor= </label><input type="number" id="stackFactor" value="1.00" min="0.85" max="1.0" step="0.01"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
-      style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br> -->
 
     <label> Sheet Sizes Step = </label><input type="number" id="sheetStep" value="10" min="5" max="20" step="5"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
