@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -129,16 +130,21 @@
     display: table;
     clear: both;
   }
+
+  /* form * {
+  display: block;
+  margin: 10px;
+} */
 </style>
 
 
 
 
 <body>
-  <h2>Cross Section Designer for Laminated Circular Core - v3<br>
-    by: Ahmed Hassan, ahah43210@gmail.com
-    05.09.2022
+  <h2 id="mainTitle">Cross Section Designer for Laminated Circular Core - v0<br>
+    <!-- <a id="voltampLink">Voltamp Oman, 2022</a> -->
   </h2>
+
   <!-- Note the usage of `type=module` here as this is an ES6 module -->
   <script type="module">
     import init, { my_core_design } from './pkg/without_a_bundler_bare_for.js';
@@ -182,10 +188,19 @@
       }
 
       th.onchange = function () {
+        if (th.value <= 0.0) {
+          th.value = 0.27;
+        }
         render();
       }
 
       user_tol.onchange = function () {
+        render();
+      }
+      voltperturn.onchange = function () {
+        render();
+      }
+      freq.onchange = function () {
         render();
       }
       sheetStep.onchange = function () {
@@ -196,6 +211,12 @@
       }
 
       sheets_per_book.onchange = function () {
+        if (sheets_per_book < 1) {
+          sheets_per_book.value = 1;
+        }
+        if (sheets_per_book.value % 1 > 0) {
+          sheets_per_book.value = sheets_per_book.value.round();
+        }
         render();
       }
 
@@ -227,24 +248,44 @@
       }
 
 
-      function drawCore(steps) {
+      function drawCore(steps, qtys, solutionLine) {
+        // DrawingArea.innerHTML = '';
+        // onsubmit="downloadResults(this['name'].value, results)
+        const sheetsPerBook = parseFloat(document.getElementById('sheets_per_book').value);
+        const D = parseFloat(document.getElementById('D').value);
+        const user_tol = parseFloat(document.getElementById('user_tol').value);
+        const R = 0.5 * D;
+        const th = parseFloat(document.getElementById('th').value);
+        const min_stack = parseFloat(document.getElementById('min_stack').value);
+
+        let oldBtn = document.getElementById("DLbtn");
+        if (oldBtn != null) { oldBtn.remove() };
+
+        let downloadBtn = document.createElement("button");
+        downloadBtn.style.background = "red";
+        downloadBtn.setAttribute("id", "DLbtn");
+        // downloadBtn.style.fontWeight = "bold";
+        downloadBtn.style.width = screen.width / 10;
+        downloadBtn.style.height = screen.height / 10;
+
+
         let oldCanvas = document.getElementById("canvas");
         if (oldCanvas != null) { oldCanvas.remove() };
         let canvas = document.createElement("CANVAS");
         canvas.setAttribute("id", "canvas");
         canvas.setAttribute("width", 400);
         canvas.setAttribute("height", 400);
+
         var DrawingArea = document.getElementById("DrawingArea")
+
+        let bosluk = document.createElement("p");
+        DrawingArea.appendChild(downloadBtn);
+        DrawingArea.appendChild(bosluk);
         DrawingArea.appendChild(canvas);
         // checkboxes = document.getElementsByName('Steps');
-        const D = parseFloat(document.getElementById('D').value);
-        const R = 0.5 * D;
-        const th = parseFloat(document.getElementById('th').value);
-        const sheetsPerBook = parseFloat(document.getElementById('sheets_per_book').value);
+
+
         const book_th = th * sheetsPerBook;
-        const user_tol = parseFloat(document.getElementById('user_tol').value);
-        const sheetStep = parseFloat(document.getElementById('sheetStep').value);
-        const min_stack = parseFloat(document.getElementById('min_stack').value);
         var accumulateH = 0.0;
         const Ru = canvas.width / 2;
         const thisRatio = 2 * Ru / R;
@@ -254,47 +295,90 @@
         ctx.save();
         ctx.fillStyle = "#FF0000";
         var totalQty = 0.0;
-        var previouse_corner = 0.0;
+        let fraction_first = false;
+        let minD = Infinity;
+        let maxD = 0.0;
+        let totalArea = 0.00;
         for (let i = 0, n = steps.length; i < n; i++) {
           const thisStep = parseFloat(steps[i]);
-
-          var thisQty;
-          const idealCorener = Math.sqrt(D * D / 4.0 - thisStep * thisStep / 4.0)
-          let q_double = idealCorener / book_th;
-          let q_ceiled = Math.ceil(q_double);
-          let q_floored = Math.floor(q_double);
-          let r_ceiled = Math.sqrt(book_th * q_ceiled * book_th * q_ceiled + thisStep * thisStep / 4.0);
-          let r_floored= Math.sqrt(book_th * q_floored * book_th * q_floored + thisStep * thisStep / 4.0);
-          let thisD = 0.0;
-          if ((r_ceiled*2 - D) < user_tol) {
-            thisQty = q_ceiled;
-            thisD = 2.0*r_ceiled;
-          }
-          else {
-            thisQty = q_floored;
-            thisD = 2.0*r_floored;
-          }
-          console.log(thisD)
-          thisQty -= totalQty;
+          const thisQty = parseFloat(qtys[i]);
+          totalArea += thisStep * thisQty * book_th * 2;
           totalQty += thisQty;
+          let thisD = 2.0 * Math.sqrt(book_th * totalQty * book_th * totalQty + thisStep * thisStep / 4.0);
+          minD = Math.min(minD, thisD);
+          maxD = Math.max(maxD, thisD);
+          let dA = Math.round((D - thisD) * 100) / 100;
           var thiscorner = book_th * totalQty;
-          let corner_to_perfectProfile = idealCorener - thiscorner;
-          // let thisLable = document.getElementById("L" + steps[i]);
-          // thisLable.innerHTML = " " + thisStep;
-          // thisLable.innerHTML += " -- " + thiscorner + " mm ";
-          // thisLable.innerHTML += "== (" + Math.round(thiscorner / th) + " sheets)";
           ctx.rect(0, accumulateH, thisStep / 2 * thisRatio, thiscorner * thisRatio - accumulateH);
-          // ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", corner to profile = " + Math.round(corner_to_perfectProfile * 100) / 100 + " mm", 0, (2 * (thiscorner-1) * thisRatio) / 2)
-          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", Perfect dia - step dia = " + Math.round((D - thisD) * 100) / 100 + " mm", 0, (2 * (thiscorner-1) * thisRatio) / 2)
-          previouse_corner = thiscorner;
+          ctx.fillText("Step = " + steps[i] + "mm, Qty = " + thisQty + " books" + ", Perfect dia - step dia = " + dA + " mm", 0, (2 * (thiscorner - 1) * thisRatio) / 2);
           accumulateH = thiscorner * thisRatio;
-          // console.log(thiscorner)
         }
-        // console.log(R)
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, 2 * Ru, 0 * Math.PI, 2 * Math.PI);
         ctx.stroke();
         ctx.moveTo(0, 0);
+
+        var currentdate = new Date();
+        var datetime = "@date:" + currentdate.getDate() + "_"
+          + (currentdate.getMonth() + 1) + "_"
+          + currentdate.getFullYear() + " @time_ "
+          + currentdate.getHours() + "_"
+          + currentdate.getMinutes() + "_"
+          + currentdate.getSeconds();
+        let thisDate = currentdate.getDate() + "/"
+          + (currentdate.getMonth() + 1) + "/"
+          + currentdate.getFullYear();
+        let thisTime = currentdate.getHours() + ":"
+          + currentdate.getMinutes() + ":"
+          + currentdate.getSeconds();
+
+        downloadBtn.type = "submit";
+        downloadBtn.innerHTML = "Download This Design";
+
+
+        let indirilecekMetin = "date;" + thisDate + "; \n";
+        indirilecekMetin += "time;" + thisTime + "; \n";
+        indirilecekMetin += ";\n";
+
+        indirilecekMetin += "Main info; \n";
+        indirilecekMetin += "Core Dia; " + D + ";mm \n";
+        indirilecekMetin += "Sheet Thickness; " + th + ";mm \n";
+        indirilecekMetin += "Sheets per Book; " + sheetsPerBook + "; \n";
+        indirilecekMetin += "Minimum Stack; " + min_stack + ";mm \n";
+        indirilecekMetin += "Dia. Positive Tolerance; " + user_tol + ";mm \n";
+        indirilecekMetin += "Lamination Factor; " + lamFactor.value + "; \n";
+        indirilecekMetin += "Stacking Factor; " + stackFactor.value + "; \n";
+        indirilecekMetin += "Frequency; " + freq.value + ";Hz \n";
+        indirilecekMetin += "Volt Per Turn; " + voltperturn.value + ";volt/turn \n";
+
+        indirilecekMetin += ";\n";
+        indirilecekMetin += ";\n";
+        indirilecekMetin += "Results; \n";
+        let effective_area = totalArea * stackFactor.value * lamFactor.value;
+        indirilecekMetin += "obtained Area; " + effective_area + ";mm2 \n";
+        // indirilecekMetin += "obtained Area; " + solutionLine.slice(14, 19) + ";mm2 \n";
+        // indirilecekMetin += "Bmax; " + solutionLine.slice(64, 68) + ";Tesla \n";
+        let bmax_calculatedHere = voltperturn.value / (4.44 * freq.value * effective_area / 1000000.0);
+        indirilecekMetin += "Bmax; " + bmax_calculatedHere + ";Tesla \n";
+        indirilecekMetin += "Ratio to perfect Area; " + totalArea / (Math.PI * D * D / 4) + "; \n";
+        // indirilecekMetin += "Ratio to perfect Area; " + solutionLine.slice(44, 49) + "; \n";
+        indirilecekMetin += "min. obtained Dia.; " + minD + ";mm \n";
+        indirilecekMetin += "max. obtained Dia.; " + maxD + ";mm \n";
+        indirilecekMetin += ";\n";
+        indirilecekMetin += "#; sheet size; No of Books; No of sheets\n";
+        for (let ii = 0, n = steps.length; ii < n; ii++) {
+          indirilecekMetin += (ii + 1).toString() + ";" + steps[ii].toString() + ";" + qtys[ii].toString() + ";" + (qtys[ii] * sheetsPerBook).toString() + "\n";
+        }
+
+        // console.log(solutionLine.slice(0, 21));
+
+        // console.log(indirilecekMetin);
+
+        downloadBtn.onclick = function () {
+          downloadResults("Core Designer Results_ " +"core Dia_ " + D +" mm " +  datetime + ".csv", indirilecekMetin);
+        };
+
+
       }
       function render() {
         // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
@@ -306,7 +390,7 @@
         let maxSheet = Number(sliderUL.value);
         Availables = [];
         let results = "";
-        
+
         for (let x = minSheet; x <= maxSheet; x += parseInt(sheetStep.value)) {
           let element = document.createElement("button");
           element.classList.add("field");
@@ -337,15 +421,17 @@
         results = "";
         if (Availables.length != 0) {
           let newTh = parseFloat(th.value) * parseFloat(sheets_per_book.value);
-          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value, min_stack.value, lamFactor.value, stackFactor.value);
+          results = my_core_design(D.value, newTh.toString(), Availables.toString(), user_tol.value, min_stack.value, lamFactor.value, stackFactor.value, freq.value, voltperturn.value);
         }
+        // console.log(results);
         Resultsss.innerHTML = "";
         detailedResults.innerHTML = "";
         detailedResultsLABEL.innerHTML = "";
         results = results.split("***");
         for (let si = 0; si < results.length; si++) {
           let elementP = document.createElement("a");
-          elementP.innerText = results[si];
+          let furthrt_splitted_results = results[si].split("@@");
+          elementP.innerText = furthrt_splitted_results[0];
           elementP.href = "#detailedResults";
           elementP.style.textDecoration = "none";
           elementP.style.fontSize = "10pt";
@@ -381,32 +467,31 @@
             detailedResults.appendChild(elementD);
 
             const regex = /\[.*?\]/gm;
+            const regex_qty = /\<.*?\>/gm;
             let m;
-            if ((m = regex.exec(elementP.innerText)) !== null) {
+            let m_qty;
+            // console.log(furthrt_splitted_results[0]);
+            if ((m = regex.exec(furthrt_splitted_results[0])) !== null) {
               // This is necessary to avoid infinite loops with zero-width matches
               if (m.index === regex.lastIndex) {
                 regex.lastIndex++;
               }
-              let d_big = Number(D.value);
-              let d_small = 0.0;
-              let previousQty = 0;
-              m.forEach((match, groupIndex) => {
-                // console.log(`Found match, group ${groupIndex}: ${match}`);
-                let thisComb = match.replace(/[^0-9.]/g, ' ').replace(/[\n\r\s\t]+/g, ' ').replace(/^\s+|\s+$/g, '').split(" ");
-                console.log(thisComb);
-                // for (let sheeti = 0; sheeti < thisComb.length; sheeti++) {
-                //   let elementS = document.createElement("a");
-                //   d_small = Number(thisComb[sheeti]);
-                //   let thisSheetsQty = Math.ceil(Math.sqrt(d_big * d_big / 4.0 - d_small * d_small / 4.0) / Number(th.value)) - previousQty;
-                //   let thisSheetsTh = thisSheetsQty * Number(th.value);
-                //   elementS.innerHTML = "Sheet size: " + thisComb[sheeti].toString().padStart(3, '0') + " - Sheets Qty = " + thisSheetsQty.toString().padStart(3, '0') + " ×2 sheets == " + thisSheetsTh.toFixed(3) + " ×2 mm hieght<br>";
-                //   detailedResults.appendChild(elementS);
-                //   // console.log(Number(th));
-                //   previousQty += thisSheetsQty;
-                // }
-                // thisSheetQty = 
-                drawCore(thisComb)
-              });
+              if ((m_qty = regex_qty.exec(furthrt_splitted_results[1])) !== null) {
+                if (m_qty.index === regex_qty.lastIndex) {
+                  regex_qty.lastIndex++;
+                }
+                let d_big = Number(D.value);
+                let d_small = 0.0;
+                let previousQty = 0;
+                m.forEach((match, groupIndex) => {
+                  m_qty.forEach((match_qty, groupIndex_qty) => {
+                    // console.log(`Found match, group ${groupIndex}: ${match}`);
+                    let thisComb = match.replace(/[^0-9.]/g, ' ').replace(/[\n\r\s\t]+/g, ' ').replace(/^\s+|\s+$/g, '').split(" ");
+                    let thisQty = match_qty.replace(/[^0-9.]/g, ' ').replace(/[\n\r\s\t]+/g, ' ').replace(/^\s+|\s+$/g, '').split(" ");
+                    drawCore(thisComb, thisQty, elementP.innerText)
+                  })
+                });
+              }
             }
 
 
@@ -431,42 +516,52 @@
 
     }
 
+
     run();
   </script>
 
-  <!-- Tab links -->
-  <!-- <div class="tab">
-  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'London')">Core & sheets dimensions</button>
-  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'Paris')">Available sheets</button>
-  <button class="tablinks" style = "font-size:20pt" onclick="openCity(event, 'Tokyo')">Results</button>
-</div> -->
 
-  <!-- Tab content -->
-  <!-- <div id="London" class="tabcontent">
+  <!-- <form onsubmit="downloadResults(this['name'].value, results)">
+  <input type="text" name="name" value="core design Results.txt">
+  <textarea name="text"></textarea>
+  <input type="submit" value="Download Results">
+</form> -->
 
-  <h3 style = "font-size:20pt">Core & sheets dimensions</h3>
-  <div style="background-color:white;">
-  <p>London is the capital city of England.</p>
-</div> -->
-
-
-  <!-- <div id="Paris" class="tabcontent"> -->
-  <!-- <div class="row"> -->
   <div class="column" style="background-color:white;width: 40%;">
     <h3 style="font-size:20pt">Core & sheets dimensions</h3>
     <label> Core Diameter = </label><input type="number" id="D" value="250" min="20"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
-    <label> Allowable Dia. Tolerance= </label><input type="number" id="user_tol" value="0.0" min="0.0" max="1.0" step="0.1"
-      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+    <label> Allowable Dia. Tolerance= </label><input type="number" id="user_tol" value="0.0" min="0.0" max="1.0"
+      step="0.1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
-    <label> Sheet Thickness= </label><input type="text" id="th" value="0.27"
+
+    <label> Volt per Turn = </label><input type="number" id="voltperturn" value="10.0" min="0.1" max="100" step="1.0"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> volt<br>
+
+    <!-- <label> Frequency = </label><input type="number" id="freq" value="50" min="50" max="60" step="10"
+      oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
+      style="width: 30%;margin-bottom:10px;font-size:20pt" /> Hz<br> -->
+
+
+
+    <label for="freq">Frequency = </label>
+    <select name="freq" id="freq" style="width: 30%;margin-bottom:10px;font-size:20pt">
+      <option value=50>50</option>
+      <option value=60>60</option>
+    </select> Hz<br>
+
+
+
+
+    <label> Sheet Thickness= </label><input type="number" id="th" value="0.27" step="0.1" min="0.1" max="0.5"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
     <label> Sheets per Book = </label><input type="number" id="sheets_per_book" value="7" min="1"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
-    <label> Minimum Stack= </label><input type="text" id="min_stack" value="2"
+    <label> Minimum Stack= </label><input type="text" id="min_stack" value="5"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
     <label> Lamination Factor= </label><input type="number" id="lamFactor" value="0.96" min="0.85" max="1.0" step="0.01"
@@ -476,11 +571,11 @@
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> <br>
 
-      <label> Sheet Sizes Step = </label><input type="number" id="sheetStep" value="10" min="5" max="20" step="5"
+    <label> Sheet Sizes Step = </label><input type="number" id="sheetStep" value="10" min="5" max="20" step="5"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm <br>
 
-      
+
     <h3 style="font-size:16pt">* Limit of Available Sheet Sizes </h3>
 
     <div class="slidecontainer">
@@ -520,7 +615,15 @@
 
 
   <script>
-
+    function downloadResults(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
     // function openCity(evt, cityName) {
     //   // Declare all variables
     //   var i, tabcontent, tablinks;
