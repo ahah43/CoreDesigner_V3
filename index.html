@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -137,7 +138,7 @@
 } */
 </style>
 
-
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 
 <body>
@@ -317,7 +318,7 @@
         ctx.arc(0, 0, 2 * Ru, 0 * Math.PI, 2 * Math.PI);
         ctx.stroke();
         ctx.moveTo(0, 0);
-
+        let toPrint = [];
         var currentdate = new Date();
         var datetime = "@date:" + currentdate.getDate() + "_"
           + (currentdate.getMonth() + 1) + "_"
@@ -334,52 +335,49 @@
 
         downloadBtn.type = "submit";
         downloadBtn.innerHTML = "Download This Design";
-
-
-        let indirilecekMetin = "date; " + thisDate + "; \n";
-        indirilecekMetin += "time;" + thisTime + "; \n";
-        indirilecekMetin += ";\n";
-
-        indirilecekMetin += "Main info; \n";
-        indirilecekMetin += "Core Dia; " + D + ";mm \n";
-        indirilecekMetin += "Sheet Thickness; " + th + ";mm \n";
-        indirilecekMetin += "Sheets per Book; " + sheetsPerBook + "; \n";
-        indirilecekMetin += "Minimum Stack; " + min_stack + ";mm \n";
-        indirilecekMetin += "Dia. Positive Tolerance; " + user_tol + ";mm \n";
-        indirilecekMetin += "Lamination Factor; " + lamFactor.value + "; \n";
-        // indirilecekMetin += "Stacking Factor; " + stackFactor.value + "; \n";
-        indirilecekMetin += "Frequency; " + freq.value + ";Hz \n";
-        indirilecekMetin += "Volt Per Turn; " + voltperturn.value + ";volt/turn \n";
-
-        indirilecekMetin += ";\n";
-        indirilecekMetin += ";\n";
-        indirilecekMetin += "Results; \n";
+        
         let effective_area = totalArea * lamFactor.value;
-        indirilecekMetin += "obtained Area; " + effective_area + ";mm2 \n";
-        // indirilecekMetin += "obtained Area; " + solutionLine.slice(14, 19) + ";mm2 \n";
-        // indirilecekMetin += "Bmax; " + solutionLine.slice(64, 68) + ";Tesla \n";
         let bmax_calculatedHere = voltperturn.value / (4.44 * freq.value * effective_area / 1000000.0);
-        indirilecekMetin += "Bmax; " + bmax_calculatedHere + ";Tesla \n";
-        indirilecekMetin += "Ratio to perfect Area; " + totalArea / (Math.PI * D * D / 4) + "; \n";
-        // indirilecekMetin += "Ratio to perfect Area; " + solutionLine.slice(44, 49) + "; \n";
-        indirilecekMetin += "min. obtained Dia.; " + minD + ";mm \n";
-        indirilecekMetin += "max. obtained Dia.; " + maxD + ";mm \n";
-        indirilecekMetin += ";\n";
-        indirilecekMetin += "#; sheet size; No of Books; No of sheets\n";
-        for (let ii = 0, n = steps.length; ii < n; ii++) {
-          indirilecekMetin += (ii + 1).toString() + ";" + steps[ii].toString() + ";" + qtys[ii].toString() + ";" + (qtys[ii] * sheetsPerBook).toString() + "\n";
-        }
 
+        toPrint.push(["date", thisDate]);
+        toPrint.push(["time", thisTime]);
+        toPrint.push([""]);
+        toPrint.push([""]);
+        toPrint.push(["Main Inputs"]);
+        toPrint.push(["Core Dia.", D, "mm"]);
+        toPrint.push(["Sheet Thickness", th, "mm"]);
+        toPrint.push(["Sheets per Book", sheetsPerBook]);
+        toPrint.push(["Minimum Stack", min_stack, "mm"]);
+        toPrint.push(["Dia. Positive Tolerance", user_tol, "mm"]);
+        toPrint.push(["Lamination Factor", Number(lamFactor.value)]);
+        toPrint.push(["Frequency", Number(freq.value), "Hz"]);
+        toPrint.push(["Volt Per Turn", Number(voltperturn.value), "volt/turn"]);
+        toPrint.push([""]);
+        toPrint.push([""]);
+        toPrint.push(["Results"]);
+        toPrint.push(["obtained Area", effective_area, "mm2"]);
+        toPrint.push(["Ratio to perfect Area", totalArea / (Math.PI * D * D / 4)]);
+        toPrint.push(["Bmax", bmax_calculatedHere, "Tesla"]);
+        toPrint.push(["min. obtained Dia.", minD, "mm"]);
+        toPrint.push(["max. obtained Dia.", maxD, "mm"]);
+        toPrint.push([""]);
+        toPrint.push(["#", "sheet size", "No of Books", "No of sheets"]);
+        for (let ii = 0, n = steps.length; ii < n; ii++) {
+          // indirilecekMetin += (ii + 1).toString() + "\t" + steps[ii].toString() + "\t" + qtys[ii].toString() + "\t" + (qtys[ii] * sheetsPerBook).toString() + "\n";
+          toPrint.push([ii + 1, Number(steps[ii]), Number(qtys[ii]), Number(qtys[ii]) * sheetsPerBook]);
+        }
+        // console.log(toPrint);
         // console.log(solutionLine.slice(0, 21));
 
         // console.log(indirilecekMetin);
 
         downloadBtn.onclick = function () {
-          downloadResults("Core Designer Results_ " +"core Dia_ " + D +" mm " +  datetime + ".csv", indirilecekMetin);
+          // downloadResults("Core Designer Results_ " +"core Dia_ " + D +" mm " +  datetime + ".xls", indirilecekMetin);
+          downloadResults_sheetjs("Core Designer Results_ " + "core Dia_ " + D + " mm " + datetime + ".xlsx", toPrint);
         };
 
-
       }
+
       function render() {
         // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         var DrawingArea = document.getElementById("DrawingArea");
@@ -503,15 +501,11 @@
           });
           Resultsss.appendChild(elementP);
         }
-        // Resultsss.innerText = results.replaceAll("***", "\n");
-        // return results;
+
       }
 
 
-      // function runCalculations(){
-      // results = myCoreDesign(Availables.toString());
-      // console.log(results);
-      // }
+
 
 
     }
@@ -536,7 +530,7 @@
       step="0.1" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> mm<br>
 
-    <label> Volt per Turn = </label><input type="number" id="voltperturn" value="10.0" min="0.1" max="200" step="0.1"
+    <label> Volt per Turn = </label><input type="number" id="voltperturn" value="10.0" min="0.1" max="200" step="0.01"
       oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');"
       style="width: 30%;margin-bottom:10px;font-size:20pt" /> volt<br>
 
@@ -608,12 +602,6 @@
   </div>
 
 
-  <!-- <div id="Tokyo" class="tabcontent">
-    <h3>R</h3>
-  </div> -->
-
-
-
   <script>
     function downloadResults(filename, text) {
       var element = document.createElement('a');
@@ -624,26 +612,15 @@
       element.click();
       document.body.removeChild(element);
     }
-    // function openCity(evt, cityName) {
-    //   // Declare all variables
-    //   var i, tabcontent, tablinks;
+    function downloadResults_sheetjs(filename, data) {
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      /* build up workbook */
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'SheetJS');
+      /* generate download */
+      XLSX.writeFile(wb, filename);
+    }
 
-    //   // Get all elements with class="tabcontent" and hide them
-    //   tabcontent = document.getElementsByClassName("tabcontent");
-    //   for (i = 0; i < tabcontent.length; i++) {
-    //     tabcontent[i].style.display = "none";
-    //   }
-
-    //   // Get all elements with class="tablinks" and remove the class "active"
-    //   tablinks = document.getElementsByClassName("tablinks");
-    //   for (i = 0; i < tablinks.length; i++) {
-    //     tablinks[i].className = tablinks[i].className.replace(" active", "");
-    //   }
-
-    //   // Show the current tab, and add an "active" class to the button that opened the tab
-    //   document.getElementById(cityName).style.display = "block";
-    //   evt.currentTarget.className += " active";
-    // }
 
   </script>
 
